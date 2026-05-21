@@ -1,0 +1,10 @@
+{
+  "[typescriptreact]": {
+    "editor.quickSuggestions": {
+      "strings": true
+    }
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ]
+}
