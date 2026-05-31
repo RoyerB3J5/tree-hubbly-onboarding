@@ -1,0 +1,1 @@
+- Mejorar la carga cuando paso de un paso y regreso al dashboard que no haga la peticion otra vez sino que use lo que ya esta para no estar llamando a cada rato

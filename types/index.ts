@@ -1,88 +1,70 @@
 // ── Usuario autenticado ──────────────────────────────────────────
 export interface AuthUser {
-  contactId: string
-  name: string
-  email: string
-  initials: string
+  contactId: string;
+  name: string;
+  email: string;
+  initials: string;
 }
 
 // ── Sesión guardada en cookie ────────────────────────────────────
 export interface SessionData {
-  user: AuthUser
-  expiresAt: number
+  user: AuthUser;
+  expiresAt: number;
 }
 
-// ── Estado de progreso del cliente ──────────────────────────────
-export type StepStatus = "completed" | "current" | "pending"
-
 export interface StepProgress {
-  [stepId: number]: boolean
+  [stepId: number]: boolean;
 }
 
 export interface ProgressState {
-  steps: StepProgress
-  currentStep: number
-  completedCount: number
+  steps: StepProgress;
+  currentStep: number;
+  completedCount: number;
 }
 
 // ── Segmentos de descripción con links opcionales ──────────────
 export interface DescriptionSegment {
-  text: string
-  href?: string
+  text: string;
+  href?: string;
 }
 
 // ── Definición de cada paso ──────────────────────────────────────
 export interface Step {
-  id: number
-  title: string
-  description: string | DescriptionSegment[]
-  buttonText?: string
-  iframeUrl: string | null // null hasta que GHL te pase la URL
+  id: number;
+  title: string;
+  description: string | DescriptionSegment[];
+  buttonText?: string;
+  iframeUrl: string | null; // null hasta que GHL te pase la URL
+}
+
+// ── Estado de cada paso con restricciones ───────────────────────
+export interface StepStatus {
+  step: number;
+  unlocked: boolean; // El usuario puede acceder a este paso
+  completed: boolean; // Este paso ya fue completado
+  current: boolean; // Este es el paso actual del usuario
 }
 
 // ── Respuestas de las API routes ────────────────────────────────
 export interface LoginResponse {
-  success: boolean
-  user?: AuthUser
-  progress?: StepProgress
-  error?: string
+  success: boolean;
+  user?: AuthUser;
+  progress?: StepProgress;
+  currentStageId?: string; // Stage ID actual en GHL
+  error?: string;
 }
 
 export interface CompleteStepResponse {
-  success: boolean
-  updatedStep?: number
-  error?: string
+  success: boolean;
+  updatedStep?: number;
+  error?: string;
 }
 
 export interface SyncProgressResponse {
-  success: boolean
-  steps?: StepProgress
-  error?: string
+  success: boolean;
+  steps?: StepProgress;
+  currentStageId?: string; // Stage ID actual en GHL
+  opportunityId?: string; // Opportunity ID en GHL
+  error?: string;
 }
 
-// ── Payload que envías a n8n ─────────────────────────────────────
-export interface N8NLoginPayload {
-  email: string
-  pin: string
-}
-
-export interface N8NCompleteStepPayload {
-  contactId: string
-  stepNumber: number
-}
-
-export interface N8NSyncPayload {
-  contactId: string
-}
-
-// ── Respuesta que esperas de n8n ─────────────────────────────────
-export interface N8NLoginResult {
-  success: boolean
-  contact?: {
-    id: string
-    name: string
-    email: string
-    steps: StepProgress
-  }
-  error?: string
-}

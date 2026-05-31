@@ -1,63 +1,79 @@
-import { NextRequest, NextResponse } from "next/server"
-import { n8nLogin } from "@/lib/n8n"
-import { createSession } from "@/lib/session"
-import { LoginResponse, AuthUser } from "@/types"
+import { NextRequest, NextResponse } from "next/server";
+import { getContactByEmail } from "@/lib/ghl-client";
+import { createSession } from "@/lib/session";
+import { LoginResponse, AuthUser } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { email, pin } = body
+    const body = await req.json();
+    const { email, pin } = body;
 
     // ── Validación básica ────────────────────────────────────────
     if (!email || !pin) {
       return NextResponse.json<LoginResponse>(
         { success: false, error: "Email y PIN son requeridos" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     if (typeof pin !== "string" || pin.length < 4) {
       return NextResponse.json<LoginResponse>(
         { success: false, error: "PIN inválido" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    // ── Llamar a n8n ─────────────────────────────────────────────
-    const result = await n8nLogin({ email: email.toLowerCase().trim(), pin })
+    // ── 1. Buscar contacto por email y obtener datos completos ────
+    const contactData = await getContactByEmail(email.toLowerCase().trim());
 
-    if (!result.success || !result.contact) {
+    if (!contactData.success || !contactData.contactId) {
       return NextResponse.json<LoginResponse>(
-        { success: false, error: result.error ?? "Credenciales incorrectas" },
-        { status: 401 }
-      )
+        { success: false, error: "Email no encontrado" },
+        { status: 401 },
+      );
     }
 
-    // ── Crear sesión ─────────────────────────────────────────────
+    // ── 2. Validar PIN ───────────────────────────────────────────
+    if (!contactData.pin) {
+      return NextResponse.json<LoginResponse>(
+        { success: false, error: "PIN no configurado" },
+        { status: 401 },
+      );
+    }
+
+    if (contactData.pin !== pin) {
+      return NextResponse.json<LoginResponse>(
+        { success: false, error: "PIN incorrecto" },
+        { status: 401 },
+      );
+    }
+
+    // ── 3. Crear usuario y sesión ─────────────────────────────────
     const user: AuthUser = {
-      contactId: result.contact.id,
-      name: result.contact.name,
-      email: result.contact.email,
-      initials: result.contact.name
+      contactId: contactData.contactId,
+      name: contactData.name || "Usuario",
+      email: contactData.email || email,
+      initials: (contactData.name || "U")
         .split(" ")
-        .map((n) => n[0])
+        .map((n: any) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2),
-    }
+    };
 
-    await createSession(user)
+    await createSession(user);
 
+    // ── 4. NOTA: La obtención de oportunidad y progreso se hace ───
+    //     en /api/progress/sync después del login (mejor separación)
     return NextResponse.json<LoginResponse>({
       success: true,
       user,
-      progress: result.contact.steps,
-    })
+    });
   } catch (error) {
-    console.error("[API /auth/login]", error)
+    console.error("[API /auth/login]", error);
     return NextResponse.json<LoginResponse>(
       { success: false, error: "Error interno del servidor" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
