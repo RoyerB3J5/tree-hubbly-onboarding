@@ -122,7 +122,7 @@ export default function StepClient({ step, user }: Props) {
     //   iframeRef → ref para el iframe (necesario para detectar eventos)
     // ────────────────────────────────────────────────────────────
 
-    <div className="w-full flex justify-center items-center min-h-screen">
+    <div className="w-full flex justify-center items-start min-h-screen">
       <div className="container-full flex flex-col justify-center items-center w-full py-20 h-full gap-8">
         {/* MENSAJE DE PASO BLOQUEADO */}
         {isBlocked && (
@@ -337,7 +337,7 @@ export default function StepClient({ step, user }: Props) {
 
             {/* Estado completado */}
             {(isDone || justCompleted) && (
-              <div className="w-full rounded-lg bg-green-50 border border-green-200 px-6 py-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-auto rounded-lg bg-green-50 border border-green-200 px-6 py-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                 <svg
                   className="w-6 h-6 text-green-600"
                   fill="currentColor"

@@ -14,7 +14,8 @@ interface Props {
 
 export default function DashboardClient({ user }: Props) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  // isInitializing: true solo si NO tenemos datos en el store (primera carga)
+  const [isInitializing, setIsInitializing] = useState(true);
   const [syncError, setSyncError] = useState(false);
 
   const {
@@ -34,11 +35,10 @@ export default function DashboardClient({ user }: Props) {
     setUser(user);
   }, [user, setUser]);
 
-  // Sincronizar progreso real desde GHL al cargar
+  // Sincronizar progreso: usar datos cached inmediatamente, sincronizar en background
   useEffect(() => {
     async function syncFromGHL() {
       try {
-        setIsLoading(true);
         setSyncError(false);
         const res = await fetch("/api/progress/sync");
         const data = await res.json();
@@ -56,10 +56,20 @@ export default function DashboardClient({ user }: Props) {
       } catch {
         setSyncError(true);
       } finally {
-        setIsLoading(false);
+        // Marcar que terminó la inicialización
+        setIsInitializing(false);
       }
     }
-    syncFromGHL();
+
+    // Si tenemos datos en el store (del localStorage), no mostrar skeleton
+    if (steps && Object.keys(steps).length > 0) {
+      // Datos cached disponibles: sincronizar en background
+      setIsInitializing(false);
+      syncFromGHL();
+    } else {
+      // Sin datos cached: esperar la respuesta de la API
+      syncFromGHL();
+    }
   }, [syncSteps, setCurrentStageId, setOpportunityId]);
 
   async function handleLogout() {
@@ -87,7 +97,7 @@ export default function DashboardClient({ user }: Props) {
   const stepsStatus = currentStageId ? getStepsStatus(currentStageId) : null;
 
   // ── SKELETON LOADER MIENTRAS CARGA ────────────────────────────
-  if (isLoading) {
+  if (isInitializing) {
     return (
       <section className="w-full flex flex-col justify-center items-center">
         {/* Header */}
@@ -333,7 +343,7 @@ export default function DashboardClient({ user }: Props) {
                     : step.description}
                 </p>
                 <button
-                  className={`flex justify-center items-center gap-2 w-full  rounded-[4px] border border-secondary py-3 text-[16px] font-medium leading-[150%]   transition-all duration-300 ease-in-out  ${isDone ? "bg-secondary text-primary " : "bg-transparent text-secondary cursor-pointer hover:translate-y-[-3px]"} `}
+                  className={`flex justify-center items-center gap-2 w-full  rounded-[4px] border border-secondary py-3 text-[16px] font-medium leading-[150%]   transition-all duration-300 ease-in-out cursor-pointer ${isDone ? "bg-secondary text-primary " : "bg-transparent text-secondary  hover:translate-y-[-3px]"} `}
                   onClick={() => handleStepClick(step.id)}
                   disabled={isLocked}
                 >

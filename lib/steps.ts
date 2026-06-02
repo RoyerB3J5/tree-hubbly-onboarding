@@ -83,7 +83,7 @@ export const STEPS: Step[] = [
     title: "Programa Llamada de Kickoff",
     description:
       "La llamada de Kickoff es donde te reunirás con tu Client Success Manager para presentarte nuestra propuesta de marketing (el marketing calendar).",
-    buttonText: "Agendar llamada",
+    buttonText: "Programar",
     iframeUrl: null, // TODO: reemplazar con URL de calendario GHL
   },
   {
